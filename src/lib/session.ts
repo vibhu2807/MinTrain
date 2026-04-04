@@ -4,7 +4,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
-import { ensureProfile, getHouseholdState } from "@/lib/household-store";
+import { ensureProfile } from "@/lib/household-store";
 import { HouseholdMemberId } from "@/lib/types";
 
 export const sessionCookieName = "mintrain_session";
@@ -75,10 +75,6 @@ export function clearSession(response: NextResponse) {
     path: "/",
     maxAge: 0,
   });
-}
-
-export async function getResolvedHouseholdProfiles() {
-  return (await getHouseholdState()).profiles;
 }
 
 export async function getProfileForMember(memberId: HouseholdMemberId) {
