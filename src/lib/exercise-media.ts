@@ -1,9 +1,3 @@
-import { ExerciseMediaId } from "@/lib/types";
-
-export type ExerciseMediaSpec = {
-  equipmentLabel: string;
-  gifUrl?: string;
-};
 
 /**
  * GIF lookup — maps exercise keywords to local GIF files.
@@ -85,15 +79,3 @@ export function findGifForExercise(name: string): string | undefined {
   return undefined;
 }
 
-/**
- * Legacy catalog for the 6 original mediaIds.
- * Used by ExerciseVisual component for backwards compatibility.
- */
-export const exerciseMediaCatalog: Record<ExerciseMediaId, ExerciseMediaSpec> = {
-  leg_press: { equipmentLabel: "Leg Press Machine", gifUrl: "/exercises/leg-press.gif" },
-  chest_press: { equipmentLabel: "Chest Press Machine", gifUrl: "/exercises/chest-press.gif" },
-  lat_pulldown: { equipmentLabel: "Lat Pulldown Machine", gifUrl: "/exercises/lat-pulldown.gif" },
-  romanian_deadlift: { equipmentLabel: "Dumbbells", gifUrl: "/exercises/romanian-deadlift.gif" },
-  split_squat: { equipmentLabel: "Bench + Dumbbells", gifUrl: "/exercises/split-squat.gif" },
-  dead_bug: { equipmentLabel: "Floor / Mat", gifUrl: "/exercises/dead-bug.gif" },
-};

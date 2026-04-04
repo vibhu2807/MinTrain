@@ -175,11 +175,11 @@ function normalizeTrackingState(rawTracking: unknown, dateKey: string): DailyTra
 
 function normalizeTrackingMap(rawTracking: unknown, dateKey: string): TrackingMap {
   const source = isRecord(rawTracking) ? rawTracking : {};
-  return {
-    member_you: normalizeTrackingState(source.member_you, dateKey),
-    member_brother: normalizeTrackingState(source.member_brother, dateKey),
-    member_sister_in_law: normalizeTrackingState(source.member_sister_in_law, dateKey),
-  };
+  const result: TrackingMap = {};
+  for (const [id, raw] of Object.entries(source)) {
+    result[id] = normalizeTrackingState(raw, dateKey);
+  }
+  return result;
 }
 
 function overlayCheckedGroceries(baseGroceries: GroceryItem[], savedGroceries: GroceryItem[]) {
@@ -310,10 +310,7 @@ export async function getHouseholdState() {
   return readState();
 }
 
-export async function getTrackingForMember(memberId: HouseholdMemberId) {
-  const household = await getHouseholdState();
-  return household.tracking[memberId];
-}
+
 
 export function createBlankProfile(memberId: string): UserProfile {
   return {

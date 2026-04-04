@@ -1,11 +1,12 @@
 # MinTrain
 
-A private, mobile-first household fitness and meal coach for 3 family members.
+A private, mobile-first household fitness and meal coach.
 
 Built by **Mintellion**.
 
 ## What it does
 
+- Anyone can sign up with a username and password
 - Each person gets a personal AI-generated plan based on their body, goal, and schedule
 - Full-day meal suggestions with protein targets (breakfast, lunch, pre/post workout, dinner)
 - 3 shared dinner options every night — pick one, the house follows
@@ -16,20 +17,11 @@ Built by **Mintellion**.
 
 ## How to use
 
-1. Open the app on your phone
-2. Pick your profile and sign in
-3. Complete the onboarding (takes 2 minutes)
-4. AI builds your personal plan
-5. Follow your meals and workout for the day
-6. Plan refreshes at midnight with new food and exercises
-
-## Accounts
-
-| Member | Username | Password |
-|--------|----------|----------|
-| You | vibhu | StrongStart!23 |
-| Brother | brother | ProteinStart!23 |
-| Sister-in-law | sil | DinnerStart!23 |
+1. Open the app and create an account
+2. Complete the onboarding (takes 2 minutes)
+3. AI builds your personal plan
+4. Follow your meals and workout for the day
+5. Plan refreshes at midnight with new food and exercises
 
 ## Run locally
 
@@ -42,9 +34,10 @@ Open [http://localhost:3000](http://localhost:3000)
 
 ## Environment
 
-Copy `.env.example` to `.env.local` and set your OpenAI API key:
+Copy `.env.example` to `.env.local` and set your values:
 
 ```
+MINTRAIN_SESSION_SECRET=your-secret-here
 OPENAI_API_KEY=sk-your-key-here
 ```
 
@@ -52,8 +45,8 @@ OPENAI_API_KEY=sk-your-key-here
 
 - Next.js 16 + React 19 + TypeScript
 - Tailwind CSS 4
-- OpenAI GPT-4o-mini for AI generation
-- File-based persistence (local) / Vercel KV (production)
+- OpenAI GPT-4o-mini
+- File-based persistence
 - PWA with service worker
 - 26 exercise GIF demos
 
@@ -61,7 +54,7 @@ OPENAI_API_KEY=sk-your-key-here
 
 1. Push to GitHub
 2. Connect repo in Vercel
-3. Add `OPENAI_API_KEY` in Vercel environment variables
+3. Add `OPENAI_API_KEY` and `MINTRAIN_SESSION_SECRET` in environment variables
 4. Deploy
 
 ---

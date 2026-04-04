@@ -126,20 +126,6 @@ export function proteinTargetFor(profile: UserProfile, workoutIntensity: "rest" 
   return round(profile.weightKg * (baseMultiplier + activityBonus + paceBonus + intensityBonus));
 }
 
-export function todaysIntensity(exercises: { sets: string; reps: string }[]): "rest" | "light" | "moderate" | "heavy" {
-  if (exercises.length === 0) return "rest";
-  if (exercises.length <= 3) return "light";
-  if (exercises.length <= 5) return "moderate";
-  return "heavy";
-}
-
-export function hydrationTargetLitres(profile: UserProfile) {
-  const base = profile.weightKg * 35;
-  const activityBonus = { light: 250, moderate: 400, active: 550 }[profile.activityLevel];
-  const trainingBonus = profile.trainingDaysPerWeek >= 5 ? 350 : 200;
-  return (round(base + activityBonus + trainingBonus) / 1000).toFixed(1);
-}
-
 export function hydrationTargetMlFor(profile: UserProfile) {
   const base = profile.weightKg * 35;
   const activityBonus = {

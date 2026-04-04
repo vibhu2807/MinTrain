@@ -5,11 +5,8 @@ import OpenAI from "openai";
 import type {
   DailyCoachSummary,
   DailyMealSlot,
-  ExerciseMediaId,
   HouseholdInsight,
   HouseholdMemberId,
-  MealCandidate,
-  RecipeCard,
   TrackingNote,
   UserProfile,
   WorkoutExercise,
@@ -42,20 +39,14 @@ function profileContext(profile: UserProfile): string {
   ].filter(Boolean).join("\n");
 }
 
-const VALID_MEDIA_IDS: ExerciseMediaId[] = [
-  "leg_press", "chest_press", "lat_pulldown",
-  "romanian_deadlift", "split_squat", "dead_bug",
-];
-
-function pickMediaId(name: string): ExerciseMediaId {
+function pickMediaId(name: string): string {
   const lower = name.toLowerCase();
-  if (lower.includes("leg press") || lower.includes("squat") && !lower.includes("split")) return "leg_press";
+  if (lower.includes("leg press") || (lower.includes("squat") && !lower.includes("split"))) return "leg_press";
   if (lower.includes("chest") || lower.includes("bench") || lower.includes("push")) return "chest_press";
   if (lower.includes("lat") || lower.includes("pull") || lower.includes("row")) return "lat_pulldown";
   if (lower.includes("deadlift") || lower.includes("hinge") || lower.includes("rdl")) return "romanian_deadlift";
   if (lower.includes("split") || lower.includes("lunge") || lower.includes("step")) return "split_squat";
-  if (lower.includes("bug") || lower.includes("core") || lower.includes("plank") || lower.includes("crunch")) return "dead_bug";
-  return VALID_MEDIA_IDS[Math.floor(Math.random() * VALID_MEDIA_IDS.length)];
+  return "dead_bug";
 }
 
 async function chatJson<T>(system: string, user: string, temperature = 0.7): Promise<T | null> {
@@ -266,79 +257,6 @@ Keep it brief, warm, and practical. No generic fluff.`;
   return chatJson<DailyCoachSummary>(system, user);
 }
 
-// ─── Dinner Recipes ─────────────────────────────────────────────────────────
-
-type AIDinnerResponse = {
-  recipes: Array<{
-    id: string;
-    name: string;
-    cuisine: string;
-    prepMinutes: number;
-    proteinGrams: number;
-    spiceProfile: string;
-    whyItWorks: string;
-    ingredients: string[];
-    method: string[];
-    tags: string[];
-  }>;
-};
-
-export async function aiGenerateDinnerRecipes(
-  householdProfiles: Record<HouseholdMemberId, UserProfile>,
-): Promise<RecipeCard[] | null> {
-  const members = Object.values(householdProfiles);
-  const householdContext = members
-    .map((p) => `${p.displayName}: goal=${p.goal.replace(/_/g, " ")}, likes=[${p.likes.join(",")}], avoids=[${p.avoids.join(",")}], spice=${p.spiceComfort}`)
-    .join("\n");
-
-  const system = `You are a home chef creating shared dinner recipes for an Indian vegetarian household.
-Return JSON:
-{
-  "recipes": [
-    {
-      "id": "kebab-case-id",
-      "name": "Recipe Name",
-      "cuisine": "cuisine style",
-      "prepMinutes": number,
-      "proteinGrams": number (per serving),
-      "spiceProfile": "spice description",
-      "whyItWorks": "why this recipe suits the household",
-      "ingredients": ["ingredient 1", "ingredient 2", ...],
-      "method": ["Step 1 instruction", "Step 2 instruction", ...],
-      "tags": ["tag1", "tag2"]
-    }
-  ]
-}
-
-Rules:
-- Generate exactly 10 dinner recipes
-- All recipes must be Indian vegetarian (dairy allowed, no eggs/meat/fish)
-- Each recipe should serve 3 people
-- Protein per serving should be 20-35g (use paneer, dal, chana, tofu, curd, besan etc.)
-- Prep time should be realistic (20-40 minutes)
-- Respect the household's combined likes, avoids, and spice preferences
-- Include a mix of Gujarati comfort, North Indian, and fusion options
-- Ingredients should be commonly available in India/UK Indian grocery stores
-- Method steps should be clear and brief (4-6 steps each)`;
-
-  const user = `Household members:\n${householdContext}`;
-  const result = await chatJson<AIDinnerResponse>(system, user);
-  if (!result?.recipes?.length) return null;
-
-  return result.recipes.map((r): RecipeCard => ({
-    id: r.id || r.name.toLowerCase().replace(/\s+/g, "-"),
-    name: r.name,
-    cuisine: r.cuisine,
-    prepMinutes: r.prepMinutes || 30,
-    proteinGrams: r.proteinGrams || 25,
-    spiceProfile: r.spiceProfile,
-    whyItWorks: r.whyItWorks,
-    ingredients: r.ingredients || [],
-    method: r.method || [],
-    tags: r.tags || [],
-  }));
-}
-
 // ─── Tracking Notes ─────────────────────────────────────────────────────────
 
 export async function aiGenerateTrackingNotes(profile: UserProfile, proteinTarget: number, hydrationTarget: number): Promise<TrackingNote[] | null> {
@@ -409,19 +327,3 @@ The user just did "${exerciseName}" and reported "${signal}" at ${currentRange}.
   return result?.hint ?? null;
 }
 
-// ─── Dinner Candidate Reasons ───────────────────────────────────────────────
-
-export async function aiGenerateCandidateReasons(
-  candidates: MealCandidate[],
-  householdProfiles: Record<HouseholdMemberId, UserProfile>,
-): Promise<string[] | null> {
-  const names = candidates.map((c, i) => `Rank ${i + 1}: ${c.recipe.name} (${c.recipe.proteinGrams}g protein, ${c.recipe.prepMinutes}min, ${c.recipe.cuisine})`).join("\n");
-  const members = Object.values(householdProfiles).map((p) => `${p.displayName}: ${p.goal.replace(/_/g, " ")}`).join(", ");
-
-  const system = `You are a dinner advisor for a household of: ${members}.
-Return JSON: { "reasons": ["reason for rank 1", "reason for rank 2", "reason for rank 3"] }
-Explain in one sentence why each dinner option is ranked where it is, considering protein needs, prep effort, and household preferences.`;
-
-  const result = await chatJson<{ reasons: string[] }>(system, names);
-  return result?.reasons?.slice(0, 3) ?? null;
-}

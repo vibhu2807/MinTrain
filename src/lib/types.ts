@@ -9,13 +9,7 @@ export type TimelinePace = "gentle" | "steady" | "focused";
 export type DifficultySignal = "too_easy" | "good_challenge" | "too_heavy";
 export type StartingLoadMode = "bodyweight" | "dumbbell" | "machine" | "cable" | "barbell";
 export type MealChoiceKey = "primary" | "backup";
-export type ExerciseMediaId =
-  | "leg_press"
-  | "chest_press"
-  | "lat_pulldown"
-  | "romanian_deadlift"
-  | "split_squat"
-  | "dead_bug";
+export type ExerciseMediaId = string;
 
 export interface UserProfile {
   id: HouseholdMemberId;
