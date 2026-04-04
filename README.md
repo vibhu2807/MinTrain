@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MinTrain
 
-## Getting Started
+A private, mobile-first household fitness and meal coach for 3 family members.
 
-First, run the development server:
+Built by **Mintellion**.
+
+## What it does
+
+- Each person gets a personal AI-generated plan based on their body, goal, and schedule
+- Full-day meal suggestions with protein targets (breakfast, lunch, pre/post workout, dinner)
+- 3 shared dinner options every night — pick one, the house follows
+- Daily gym exercises with GIF demos, weights, reps, and form tips
+- AI chat for quick questions about food, workout, or plan changes
+- Plans change automatically every day at midnight
+- Works as an iPhone app (PWA — add to home screen)
+
+## How to use
+
+1. Open the app on your phone
+2. Pick your profile and sign in
+3. Complete the onboarding (takes 2 minutes)
+4. AI builds your personal plan
+5. Follow your meals and workout for the day
+6. Plan refreshes at midnight with new food and exercises
+
+## Accounts
+
+| Member | Username | Password |
+|--------|----------|----------|
+| You | vibhu | StrongStart!23 |
+| Brother | brother | ProteinStart!23 |
+| Sister-in-law | sil | DinnerStart!23 |
+
+## Run locally
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Copy `.env.example` to `.env.local` and set your OpenAI API key:
 
-## Learn More
+```
+OPENAI_API_KEY=sk-your-key-here
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Tech stack
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Next.js 16 + React 19 + TypeScript
+- Tailwind CSS 4
+- OpenAI GPT-4o-mini for AI generation
+- File-based persistence (local) / Vercel KV (production)
+- PWA with service worker
+- 26 exercise GIF demos
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deploy to Vercel
 
-## Deploy on Vercel
+1. Push to GitHub
+2. Connect repo in Vercel
+3. Add `OPENAI_API_KEY` in Vercel environment variables
+4. Deploy
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Made by **Mintellion**
