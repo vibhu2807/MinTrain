@@ -6,7 +6,7 @@ import {
   aiGenerateTrackingNotes,
   aiGenerateWorkoutPlan,
 } from "@/lib/ai";
-import { baseGroceries, householdProfiles, recentDinnerHistory, recipeLibrary } from "@/lib/data";
+import { baseGroceries, recentDinnerHistory, recipeLibrary } from "@/lib/data";
 import {
   DailyTrackingState,
   DashboardBundle,
@@ -488,7 +488,7 @@ export function buildWorkoutPlan(profile: UserProfile): WorkoutPlan {
   };
 }
 
-export function buildDinnerCandidates(household: HouseholdProfileMap = householdProfiles): MealCandidate[] {
+export function buildDinnerCandidates(household: HouseholdProfileMap): MealCandidate[] {
   const members = Object.values(household);
   const averageTarget = members.reduce((sum, member) => sum + proteinTargetFor(member), 0) / members.length;
   const boldPreferenceCount = members.filter((member) => member.spiceComfort === "bold").length;
@@ -532,7 +532,7 @@ function deriveGroceriesFromRecipe(recipe: RecipeCard): GroceryItem[] {
   return [...baseGroceries, ...recipeGroceries];
 }
 
-export function defaultDinnerSelection(kitchenCandidates: MealCandidate[] = buildDinnerCandidates()): MealSelection {
+export function defaultDinnerSelection(kitchenCandidates: MealCandidate[]): MealSelection {
   const firstRecipe = kitchenCandidates[0].recipe;
   return {
     selectedMealId: firstRecipe.id,
@@ -542,7 +542,7 @@ export function defaultDinnerSelection(kitchenCandidates: MealCandidate[] = buil
   };
 }
 
-export function mealSelectionFromId(recipeId: string, kitchenCandidates: MealCandidate[] = buildDinnerCandidates()): MealSelection {
+export function mealSelectionFromId(recipeId: string, kitchenCandidates: MealCandidate[]): MealSelection {
   const recipe = recipeLibrary.find((item) => item.id === recipeId) ?? kitchenCandidates[0].recipe;
   return {
     selectedMealId: recipe.id,
@@ -567,7 +567,7 @@ function buildNutrition(
   };
 }
 
-export function householdInsights(household: HouseholdProfileMap = householdProfiles): HouseholdInsight[] {
+export function householdInsights(household: HouseholdProfileMap): HouseholdInsight[] {
   return Object.values(household).map((profile) => ({
     memberId: profile.id,
     memberLabel: profile.shortLabel,
@@ -621,12 +621,8 @@ export function buildDashboardBundleFromHousehold(
   };
 }
 
-export function buildDashboardBundle(memberId: HouseholdMemberId): DashboardBundle {
-  return buildDashboardBundleFromHousehold(memberId, householdProfiles);
-}
-
-export function buildSchedulerPayload(household: HouseholdProfileMap = householdProfiles): SchedulerPayload {
-  const orderedIds = Object.keys(householdProfiles) as HouseholdMemberId[];
+export function buildSchedulerPayload(household: HouseholdProfileMap): SchedulerPayload {
+  const orderedIds = Object.keys(household) as HouseholdMemberId[];
   return {
     household: orderedIds.map((memberId) => buildDashboardBundleFromHousehold(memberId, household)),
     dinnerOptions: buildDinnerCandidates(household),
@@ -639,10 +635,7 @@ export function regenerateWorkoutForProfile(
   household?: HouseholdProfileMap,
   selectedDinner?: MealSelection,
 ) {
-  const nextHousehold = household ?? {
-    ...householdProfiles,
-    [profile.id]: profile,
-  };
+  const nextHousehold = household ?? { [profile.id]: profile };
   const kitchenCandidates = buildDinnerCandidates(nextHousehold);
   const resolvedDinner = selectedDinner ?? defaultDinnerSelection(kitchenCandidates);
 

@@ -20,7 +20,7 @@ export function middleware(request: NextRequest) {
 
   const hasSession = request.cookies.get(SESSION_COOKIE_NAME)?.value != null;
 
-  if (pathname === "/login") {
+  if (pathname === "/login" || pathname === "/signup") {
     if (hasSession) {
       return NextResponse.redirect(new URL("/", request.url));
     }

@@ -1,4 +1,4 @@
-export type HouseholdMemberId = "member_you" | "member_brother" | "member_sister_in_law";
+export type HouseholdMemberId = string;
 
 export type GoalType = "build_muscle" | "fat_loss" | "recomp" | "strength_confidence";
 export type ExperienceLevel = "new" | "returning";

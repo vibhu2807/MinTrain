@@ -3,7 +3,7 @@ import "server-only";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { householdProfiles } from "@/lib/data";
+// No hardcoded profiles — users sign up dynamically
 import { buildDinnerCandidates, mealSelectionFromId } from "@/lib/engine";
 import {
   DailyTrackingState,
@@ -44,10 +44,6 @@ const householdStorePath = path.join(runtimeDirectory, "household-store.json");
 const appTimeZone = process.env.MINTRAIN_TIMEZONE ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 let mutationQueue: Promise<void> = Promise.resolve();
-
-function cloneProfiles(source: HouseholdProfileMap = householdProfiles): HouseholdProfileMap {
-  return structuredClone(source);
-}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -90,12 +86,12 @@ function emptyTrackingState(dateKey: string): DailyTrackingState {
   };
 }
 
-function emptyTrackingMap(dateKey: string): TrackingMap {
-  return {
-    member_you: emptyTrackingState(dateKey),
-    member_brother: emptyTrackingState(dateKey),
-    member_sister_in_law: emptyTrackingState(dateKey),
-  };
+function emptyTrackingMap(dateKey: string, memberIds: string[] = []): TrackingMap {
+  const map: TrackingMap = {};
+  for (const id of memberIds) {
+    map[id] = emptyTrackingState(dateKey);
+  }
+  return map;
 }
 
 function normalizeMealSelections(rawSelections: unknown) {
@@ -210,23 +206,16 @@ export function resolveDinnerSelection(
 }
 
 function normalizeProfiles(rawProfiles: unknown): HouseholdProfileMap {
-  const defaults = cloneProfiles();
   const source = isRecord(rawProfiles) ? rawProfiles : {};
+  const result: HouseholdProfileMap = {};
 
-  return {
-    member_you: {
-      ...defaults.member_you,
-      ...(isRecord(source.member_you) ? (source.member_you as Partial<UserProfile>) : {}),
-    },
-    member_brother: {
-      ...defaults.member_brother,
-      ...(isRecord(source.member_brother) ? (source.member_brother as Partial<UserProfile>) : {}),
-    },
-    member_sister_in_law: {
-      ...defaults.member_sister_in_law,
-      ...(isRecord(source.member_sister_in_law) ? (source.member_sister_in_law as Partial<UserProfile>) : {}),
-    },
-  };
+  for (const [id, rawProfile] of Object.entries(source)) {
+    if (isRecord(rawProfile) && typeof (rawProfile as Record<string, unknown>).id === "string") {
+      result[id] = rawProfile as unknown as UserProfile;
+    }
+  }
+
+  return result;
 }
 
 function normalizeKitchen(rawKitchen: unknown, profiles: HouseholdProfileMap): StoredKitchenState {
@@ -245,16 +234,15 @@ function normalizeKitchen(rawKitchen: unknown, profiles: HouseholdProfileMap): S
 }
 
 function createDefaultState(): HouseholdState {
-  const profiles = cloneProfiles();
-  const selection = resolveDinnerSelection(profiles, null);
+  const profiles: HouseholdProfileMap = {};
   const trackingDate = getCurrentTrackingDateKey();
 
   return {
     version: 1,
     profiles,
     kitchen: {
-      selectedMealId: selection.selectedMealId,
-      groceries: selection.groceries,
+      selectedMealId: "",
+      groceries: [],
       updatedAt: new Date().toISOString(),
     },
     trackingDate,
@@ -274,7 +262,7 @@ function normalizeState(rawState: unknown): HouseholdState {
     profiles,
     kitchen,
     trackingDate,
-    tracking: shouldReuseTracking ? normalizeTrackingMap(source.tracking, trackingDate) : emptyTrackingMap(trackingDate),
+    tracking: shouldReuseTracking ? normalizeTrackingMap(source.tracking, trackingDate) : emptyTrackingMap(trackingDate, Object.keys(profiles)),
   };
 }
 
@@ -325,6 +313,50 @@ export async function getHouseholdState() {
 export async function getTrackingForMember(memberId: HouseholdMemberId) {
   const household = await getHouseholdState();
   return household.tracking[memberId];
+}
+
+export function createBlankProfile(memberId: string): UserProfile {
+  return {
+    id: memberId,
+    displayName: "",
+    shortLabel: "",
+    email: "",
+    age: 25,
+    sex: "male",
+    heightCm: 170,
+    weightKg: 70,
+    goal: "build_muscle",
+    targetDate: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    timelinePace: "steady",
+    activityLevel: "moderate",
+    experience: "new",
+    confidenceLevel: 2,
+    equipmentAccess: "gym",
+    trainingDaysPerWeek: 4,
+    preferredWorkoutTime: "18:00",
+    wakeTime: "07:00",
+    breakfastTime: "08:00",
+    lunchTime: "13:00",
+    snackTime: "17:00",
+    dinnerTime: "21:00",
+    sleepTime: "23:00",
+    dietStyle: "vegetarian_dairy",
+    limitations: [],
+    likes: [],
+    avoids: [],
+    spiceComfort: "balanced",
+    notes: "",
+    onboardingComplete: false,
+  };
+}
+
+export async function ensureProfile(memberId: string) {
+  const state = await getHouseholdState();
+  if (state.profiles[memberId]) return state.profiles[memberId];
+
+  const blank = createBlankProfile(memberId);
+  await saveProfile(blank);
+  return blank;
 }
 
 export async function saveProfile(profile: UserProfile) {

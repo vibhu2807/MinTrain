@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from "react";
 
-export function LoginForm() {
+export function SignupForm() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -10,17 +10,18 @@ export function LoginForm() {
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!username.trim() || !password.trim()) { setError("Enter username and password."); return; }
+    if (!username.trim()) { setError("Pick a username."); return; }
+    if (password.length < 4) { setError("Password needs at least 4 characters."); return; }
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username: username.trim(), password }),
       });
       const data = (await res.json()) as { error?: string };
-      if (!res.ok) { setError(data.error ?? "Wrong credentials."); return; }
+      if (!res.ok) { setError(data.error ?? "Signup failed."); return; }
       window.location.href = "/";
     } catch {
       setError("Can't reach the server.");
@@ -34,7 +35,7 @@ export function LoginForm() {
       <form onSubmit={onSubmit} className="grid gap-3">
         <input
           className="input-shell"
-          placeholder="Username"
+          placeholder="Pick a username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           autoComplete="username"
@@ -42,18 +43,18 @@ export function LoginForm() {
         />
         <input
           className="input-shell"
-          placeholder="Password"
+          placeholder="Create a password"
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          autoComplete="current-password"
+          autoComplete="new-password"
         />
         <button
           type="submit"
           disabled={loading}
           className="rounded-[var(--radius)] bg-[var(--accent)] py-3 text-sm font-semibold text-[var(--bg)] transition hover:bg-[var(--accent-hover)] disabled:opacity-50"
         >
-          {loading ? "Signing in..." : "Sign in"}
+          {loading ? "Creating account..." : "Create account"}
         </button>
       </form>
 
@@ -62,8 +63,8 @@ export function LoginForm() {
       ) : null}
 
       <p className="text-center text-xs text-[var(--text-muted)]">
-        New here?{" "}
-        <a href="/signup" className="font-medium text-[var(--accent)]">Create an account</a>
+        Already have an account?{" "}
+        <a href="/login" className="font-medium text-[var(--accent)]">Sign in</a>
       </p>
     </div>
   );

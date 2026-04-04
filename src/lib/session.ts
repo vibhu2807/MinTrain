@@ -4,26 +4,10 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
-import { householdProfiles } from "@/lib/data";
-import { getHouseholdState } from "@/lib/household-store";
+import { ensureProfile, getHouseholdState } from "@/lib/household-store";
 import { HouseholdMemberId } from "@/lib/types";
 
 export const sessionCookieName = "mintrain_session";
-
-const defaultCredentials: Record<HouseholdMemberId, { username: string; password: string }> = {
-  member_you: {
-    username: process.env.MINTRAIN_YOU_USERNAME ?? "vibhu",
-    password: process.env.MINTRAIN_YOU_PASSWORD ?? "StrongStart!23",
-  },
-  member_brother: {
-    username: process.env.MINTRAIN_BROTHER_USERNAME ?? "brother",
-    password: process.env.MINTRAIN_BROTHER_PASSWORD ?? "ProteinStart!23",
-  },
-  member_sister_in_law: {
-    username: process.env.MINTRAIN_SIL_USERNAME ?? "sil",
-    password: process.env.MINTRAIN_SIL_PASSWORD ?? "DinnerStart!23",
-  },
-};
 
 const sessionSecret = process.env.MINTRAIN_SESSION_SECRET ?? "change-this-before-public-deploy";
 
@@ -60,32 +44,13 @@ function decodeSigned<T>(token: string): T | null {
   }
 }
 
-function decodeSession(token: string): SessionPayload | null {
-  const parsed = decodeSigned<SessionPayload>(token);
-  if (parsed == null || !(parsed.memberId in householdProfiles)) return null;
-  return parsed;
-}
-
 export async function getSession() {
   const store = await cookies();
   const token = store.get(sessionCookieName)?.value;
   if (!token) return null;
-  return decodeSession(token);
-}
-
-export function verifyCredentials(username: string, password: string) {
-  const entries = Object.entries(defaultCredentials) as [
-    HouseholdMemberId,
-    { username: string; password: string },
-  ][];
-
-  const match = entries.find(([, c]) => c.username.toLowerCase() === username.toLowerCase());
-  if (!match) return null;
-
-  const [memberId, creds] = match;
-  if (creds.password !== password) return null;
-
-  return householdProfiles[memberId];
+  const parsed = decodeSigned<SessionPayload>(token);
+  if (!parsed?.memberId) return null;
+  return parsed;
 }
 
 export function attachSession(response: NextResponse, memberId: HouseholdMemberId) {
@@ -117,14 +82,5 @@ export async function getResolvedHouseholdProfiles() {
 }
 
 export async function getProfileForMember(memberId: HouseholdMemberId) {
-  const household = await getHouseholdState();
-  return household.profiles[memberId];
-}
-
-export function demoCredentials() {
-  return [
-    { label: "You", username: defaultCredentials.member_you.username, password: defaultCredentials.member_you.password },
-    { label: "Brother", username: defaultCredentials.member_brother.username, password: defaultCredentials.member_brother.password },
-    { label: "Sister-in-law", username: defaultCredentials.member_sister_in_law.username, password: defaultCredentials.member_sister_in_law.password },
-  ];
+  return ensureProfile(memberId);
 }
