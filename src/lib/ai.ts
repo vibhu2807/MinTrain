@@ -118,8 +118,7 @@ Return a JSON object with this exact structure:
 }
 
 Rules:
-- Generate exactly 6 exercises for TODAY's session based on the day of the week
-- ALWAYS generate 6 exercises, no less
+- Generate 5-7 exercises for TODAY's session based on the day of the week (except rest/light days where 2-3 is fine)
 - Use a real gym trainer weekly split:
   Monday = Chest + Biceps
   Tuesday = Back + Triceps
@@ -127,7 +126,8 @@ Rules:
   Thursday = Chest + Triceps
   Friday = Back + Biceps
   Saturday = Legs + Core
-  Sunday = Full body (lighter weight, higher reps, mix of compound movements)
+  Sunday = Rest or light day (stretching, light cardio, yoga — only 2-3 easy movements)
+- Check the user's training days per week. If they train 6 days, Sunday is a light recovery day (3 easy exercises). If they train 5 or fewer, Sunday is full rest (still give 2-3 gentle stretches).
 - Each muscle group day should have 3-4 exercises for the main muscle and 2-3 for the secondary
 - For example Monday: Bench Press, Incline Press, Cable Fly, Push-up (chest) + Bicep Curl, Dumbbell Curl (biceps)
 - Exercises can repeat across weeks — that's normal gym training. Consistency builds muscle.

@@ -193,6 +193,16 @@ export function MintrainDashboard({ initialData }: { initialData: DashboardBundl
               </div>
               <span className="text-xs font-medium text-[var(--accent)]">Change</span>
             </button>
+
+            {/* Refresh plan */}
+            <button
+              type="button"
+              onClick={() => void regenerate()}
+              disabled={busy}
+              className="rounded-[var(--radius)] border border-[var(--border)] py-2.5 text-xs font-medium text-[var(--text-muted)] transition hover:text-[var(--text-secondary)] disabled:opacity-40"
+            >
+              {busy ? "Refreshing plan..." : "Refresh my plan"}
+            </button>
           </div>
         ) : null}
 
