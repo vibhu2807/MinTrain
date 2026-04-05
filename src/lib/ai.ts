@@ -136,9 +136,7 @@ Rules:
 - If user has limitations (e.g. knee issues), modify exercises accordingly
 - Keep instructions short and in simple English
 - Include home alternatives for every exercise
-- IMPORTANT: Only use these standard exercise names (exactly as written, no variations):
-  Bench Press, Incline Press, Lat Pulldown, Barbell Squat, Leg Press, Shoulder Press, Bicep Curl, Tricep Pushdown, Cable Fly, Dumbbell Row, Seated Row, Face Pull, Leg Curl, Leg Extension, Hip Thrust, Romanian Deadlift, Split Squat, Lunges, Dead Bug, Plank, Push-up, Mountain Climber, Russian Twist, Calf Raise, Goblet Squat, Chest Press
-- Do NOT invent exercise names. Pick only from the list above.`;
+- Use simple, common exercise names that any gym-goer worldwide would recognize (e.g. "Bench Press" not "Horizontal Barbell Push"). Keep names short and generic.`;
 
   const user = profileContext(profile);
   const result = await chatJson<AIWorkoutResponse>(system, user, 0.4);
