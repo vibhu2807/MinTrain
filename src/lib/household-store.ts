@@ -169,6 +169,32 @@ export async function saveDinnerSelection(recipeId: string, profiles: HouseholdP
   return selection;
 }
 
+// ── Daily Plans (AI-generated, cached per day) ──
+
+export async function getSavedPlan(memberId: string): Promise<{ workoutPlan: unknown; mealSlots: unknown; summary: unknown } | null> {
+  const key = todayKey();
+  const { data } = await supabase
+    .from("daily_plans")
+    .select("*")
+    .eq("member_id", memberId)
+    .eq("date_key", key)
+    .single();
+
+  if (!data?.workout_plan || !data?.meal_slots) return null;
+  return { workoutPlan: data.workout_plan, mealSlots: data.meal_slots, summary: data.summary };
+}
+
+export async function saveDailyPlan(memberId: string, plan: { workoutPlan: unknown; mealSlots: unknown; summary: unknown }): Promise<void> {
+  await supabase.from("daily_plans").upsert({
+    member_id: memberId,
+    date_key: todayKey(),
+    workout_plan: plan.workoutPlan,
+    meal_slots: plan.mealSlots,
+    summary: plan.summary,
+    updated_at: new Date().toISOString(),
+  });
+}
+
 // ── Compatibility with existing code ──
 
 export function resolveDinnerSelection(

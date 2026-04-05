@@ -257,6 +257,68 @@ Keep it brief, warm, and practical. No generic fluff.`;
   return chatJson<DailyCoachSummary>(system, user);
 }
 
+// ─── Dinner Recipes ─────────────────────────────────────────────────────────
+
+import type { RecipeCard } from "@/lib/types";
+
+export async function aiGenerateDinnerOptions(
+  householdProfiles: Record<HouseholdMemberId, UserProfile>,
+): Promise<RecipeCard[] | null> {
+  const members = Object.values(householdProfiles);
+  const context = members
+    .map((p) => `${p.displayName}: goal=${p.goal.replace(/_/g, " ")}, likes=[${p.likes.join(",")}], avoids=[${p.avoids.join(",")}], spice=${p.spiceComfort}`)
+    .join("\n");
+
+  const dayName = new Date().toLocaleDateString("en-US", { weekday: "long" });
+
+  const system = `You are a home chef creating 3 dinner options for an Indian vegetarian household tonight (${dayName}).
+Return JSON:
+{
+  "recipes": [
+    {
+      "id": "kebab-case-id",
+      "name": "Recipe Name",
+      "cuisine": "cuisine style",
+      "prepMinutes": number,
+      "proteinGrams": number,
+      "spiceProfile": "spice description",
+      "whyItWorks": "one line why this works tonight",
+      "ingredients": ["ingredient with quantity", "ingredient with quantity"],
+      "method": ["Step 1 in simple English", "Step 2"],
+      "tags": ["tag1", "tag2"]
+    }
+  ]
+}
+
+Rules:
+- Generate exactly 3 dinner recipes — different from typical weekday options
+- All must be Indian vegetarian (dairy allowed, no eggs/meat/fish)
+- Each recipe serves the household (${members.length} people)
+- Protein per serving: 20-35g (use paneer, dal, chana, tofu, curd, besan)
+- Prep time: 20-40 minutes, realistic
+- Respect everyone's likes, avoids, and spice preferences
+- Include actual quantities in ingredients (200g paneer, 1 cup dal, etc.)
+- Method should be 4-6 clear steps in simple English
+- Make them different from each other (not 3 paneer dishes)`;
+
+  const user = `Household:\n${context}`;
+  const result = await chatJson<{ recipes: RecipeCard[] }>(system, user);
+  if (!result?.recipes?.length) return null;
+
+  return result.recipes.slice(0, 3).map((r): RecipeCard => ({
+    id: r.id || r.name.toLowerCase().replace(/\s+/g, "-"),
+    name: r.name,
+    cuisine: r.cuisine || "Indian",
+    prepMinutes: r.prepMinutes || 30,
+    proteinGrams: r.proteinGrams || 25,
+    spiceProfile: r.spiceProfile || "balanced",
+    whyItWorks: r.whyItWorks || "Good protein, easy to make.",
+    ingredients: r.ingredients || [],
+    method: r.method || [],
+    tags: r.tags || [],
+  }));
+}
+
 // ─── Tracking Notes ─────────────────────────────────────────────────────────
 
 export async function aiGenerateTrackingNotes(profile: UserProfile, proteinTarget: number, hydrationTarget: number): Promise<TrackingNote[] | null> {

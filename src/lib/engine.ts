@@ -1,5 +1,6 @@
 import {
   aiGenerateCoachSummary,
+  aiGenerateDinnerOptions,
   aiGenerateHouseholdInsights,
   aiGenerateLoadHint,
   aiGenerateMealSlots,
@@ -634,24 +635,30 @@ export function regenerateWorkoutForProfile(
 }
 
 /**
- * Async AI generation — called ONLY from onboarding/refresh API routes.
- * Generates personalized content and returns it for the route to store.
- * Falls back to rule-based if AI fails.
+ * Async AI generation — called from onboarding/refresh API routes.
+ * Generates personalized content, SAVES to Supabase, and returns it.
  */
 export async function regenerateWithAI(
   profile: UserProfile,
   household: HouseholdProfileMap,
   selectedDinner?: MealSelection,
 ) {
+  const { saveDailyPlan } = await import("@/lib/household-store");
   const kitchenCandidates = buildDinnerCandidates(household);
   const resolvedDinner = selectedDinner ?? defaultDinnerSelection(kitchenCandidates);
   const proteinTarget = proteinTargetFor(profile);
+  const ruleBased = regenerateWorkoutForProfile(profile, household, resolvedDinner);
 
   if (!aiEnabled) {
-    return regenerateWorkoutForProfile(profile, household, resolvedDinner);
+    await saveDailyPlan(profile.id, {
+      workoutPlan: ruleBased.workoutPlan,
+      mealSlots: ruleBased.nutrition.mealSlots,
+      summary: ruleBased.summary,
+    });
+    return ruleBased;
   }
 
-  const [aiWorkout, aiMeals, aiSummary, aiNotes, aiInsights] = await Promise.all([
+  const [aiWorkout, aiMeals, aiSummary, aiNotes, aiInsights, aiDinners] = await Promise.all([
     aiGenerateWorkoutPlan(profile).catch(() => null),
     aiGenerateMealSlots(profile, proteinTarget).catch(() => null),
     aiGenerateCoachSummary(profile).catch(() => null),
@@ -662,11 +669,22 @@ export async function regenerateWithAI(
         (Object.entries(household) as [HouseholdMemberId, UserProfile][]).map(([id, p]) => [id, proteinTargetFor(p)]),
       ) as Record<HouseholdMemberId, number>,
     ).catch(() => null),
+    aiGenerateDinnerOptions(household).catch(() => null),
   ]);
 
-  const ruleBased = regenerateWorkoutForProfile(profile, household, resolvedDinner);
+  // If AI generated dinner recipes, use those instead of hardcoded ones
+  const aiCandidates = aiDinners
+    ? aiDinners.map((recipe, i) => ({
+        rank: i + 1,
+        reason: recipe.whyItWorks,
+        effort: (recipe.prepMinutes <= 28 ? "easy" : "medium") as "easy" | "medium",
+        proteinFit: `${recipe.proteinGrams}g protein per serving.`,
+        repeatRisk: "low" as const,
+        recipe,
+      }))
+    : null;
 
-  return {
+  const result = {
     currentUser: profile,
     summary: aiSummary ?? ruleBased.summary,
     nutrition: {
@@ -675,8 +693,18 @@ export async function regenerateWithAI(
       trackingNotes: aiNotes ?? ruleBased.nutrition.trackingNotes,
     },
     workoutPlan: aiWorkout ?? ruleBased.workoutPlan,
+    kitchenCandidates: aiCandidates ?? kitchenCandidates,
     householdInsights: aiInsights ?? householdInsights(household),
   };
+
+  // Save to database so page loads use this instead of rule-based
+  await saveDailyPlan(profile.id, {
+    workoutPlan: result.workoutPlan,
+    mealSlots: result.nutrition.mealSlots,
+    summary: result.summary,
+  });
+
+  return result;
 }
 
 export async function nextLoadHint(signal: DifficultySignal, currentRange: string, profile?: UserProfile, exerciseName?: string): Promise<string> {
