@@ -51,9 +51,9 @@ export function MintrainDashboard({ initialData }: { initialData: DashboardBundl
     setBusy(true);
     try {
       const res = await fetch("/api/workouts/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(profileSnapshot) });
-      const p = (await res.json()) as { workoutPlan?: DashboardBundle["workoutPlan"]; summary?: DashboardBundle["summary"]; nutrition?: DashboardBundle["nutrition"] };
+      const p = (await res.json()) as { workoutPlan?: DashboardBundle["workoutPlan"]; summary?: DashboardBundle["summary"]; nutrition?: DashboardBundle["nutrition"]; kitchenCandidates?: DashboardBundle["kitchenCandidates"] };
       if (res.ok && p.workoutPlan) {
-        setBundle((c) => ({ ...c, generatedAt: new Date().toISOString(), currentUser: { ...c.currentUser, ...profileSnapshot }, summary: p.summary ?? c.summary, nutrition: p.nutrition ?? c.nutrition, workoutPlan: p.workoutPlan! }));
+        setBundle((c) => ({ ...c, generatedAt: new Date().toISOString(), currentUser: { ...c.currentUser, ...profileSnapshot }, summary: p.summary ?? c.summary, nutrition: p.nutrition ?? c.nutrition, workoutPlan: p.workoutPlan!, kitchenCandidates: p.kitchenCandidates ?? c.kitchenCandidates }));
         setExIdx(0); setFeedbackMap({}); setLoadHints({});
       }
     } finally { setBusy(false); }
