@@ -118,7 +118,8 @@ Return a JSON object with this exact structure:
 }
 
 Rules:
-- Generate 5-7 exercises for TODAY's session based on the day of the week
+- Generate exactly 6 exercises for TODAY's session based on the day of the week
+- ALWAYS generate 6 exercises, no less
 - Use a real gym trainer weekly split:
   Monday = Chest + Biceps
   Tuesday = Back + Triceps
@@ -126,7 +127,7 @@ Rules:
   Thursday = Chest + Triceps
   Friday = Back + Biceps
   Saturday = Legs + Core
-  Sunday = Rest day (light stretching or cardio only, 2-3 exercises max)
+  Sunday = Full body (lighter weight, higher reps, mix of compound movements)
 - Each muscle group day should have 3-4 exercises for the main muscle and 2-3 for the secondary
 - For example Monday: Bench Press, Incline Press, Cable Fly, Push-up (chest) + Bicep Curl, Dumbbell Curl (biceps)
 - Exercises can repeat across weeks — that's normal gym training. Consistency builds muscle.
@@ -222,7 +223,7 @@ Rules:
   const result = await chatJson<AIMealSlotResponse>(system, user);
   if (!result?.slots?.length) return null;
 
-  return result.slots.slice(0, 4).map((slot): DailyMealSlot => ({
+  return result.slots.slice(0, 6).map((slot): DailyMealSlot => ({
     id: slot.id,
     label: slot.label,
     time: slot.time,
