@@ -702,6 +702,7 @@ export async function regenerateWithAI(
     workoutPlan: result.workoutPlan,
     mealSlots: result.nutrition.mealSlots,
     summary: result.summary,
+    dinnerCandidates: result.kitchenCandidates,
   });
 
   return result;

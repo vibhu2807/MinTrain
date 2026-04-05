@@ -171,7 +171,7 @@ export async function saveDinnerSelection(recipeId: string, profiles: HouseholdP
 
 // ── Daily Plans (AI-generated, cached per day) ──
 
-export async function getSavedPlan(memberId: string): Promise<{ workoutPlan: unknown; mealSlots: unknown; summary: unknown } | null> {
+export async function getSavedPlan(memberId: string): Promise<{ workoutPlan: unknown; mealSlots: unknown; summary: unknown; dinnerCandidates: unknown } | null> {
   const key = todayKey();
   const { data } = await supabase
     .from("daily_plans")
@@ -181,16 +181,26 @@ export async function getSavedPlan(memberId: string): Promise<{ workoutPlan: unk
     .single();
 
   if (!data?.workout_plan || !data?.meal_slots) return null;
-  return { workoutPlan: data.workout_plan, mealSlots: data.meal_slots, summary: data.summary };
+  return {
+    workoutPlan: data.workout_plan,
+    mealSlots: data.meal_slots,
+    summary: data.summary,
+    dinnerCandidates: data.summary?.dinnerCandidates ?? null,
+  };
 }
 
-export async function saveDailyPlan(memberId: string, plan: { workoutPlan: unknown; mealSlots: unknown; summary: unknown }): Promise<void> {
+export async function saveDailyPlan(memberId: string, plan: { workoutPlan: unknown; mealSlots: unknown; summary: unknown; dinnerCandidates?: unknown }): Promise<void> {
+  const summaryWithDinner = {
+    ...(typeof plan.summary === "object" && plan.summary !== null ? plan.summary : {}),
+    dinnerCandidates: plan.dinnerCandidates ?? null,
+  };
+
   await supabase.from("daily_plans").upsert({
     member_id: memberId,
     date_key: todayKey(),
     workout_plan: plan.workoutPlan,
     meal_slots: plan.mealSlots,
-    summary: plan.summary,
+    summary: summaryWithDinner,
     updated_at: new Date().toISOString(),
   });
 }
