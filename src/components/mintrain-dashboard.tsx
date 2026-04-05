@@ -62,7 +62,8 @@ export function MintrainDashboard({ initialData }: { initialData: DashboardBundl
   const chooseDinner = async (recipeId: string) => {
     setBusy(true);
     try {
-      const res = await fetch("/api/meals/select", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ recipeId }) });
+      const picked = bundle.kitchenCandidates.find((c) => c.recipe.id === recipeId);
+      const res = await fetch("/api/meals/select", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ recipeId, recipeName: picked?.recipe.name ?? recipeId }) });
       const p = (await res.json()) as { selection?: DashboardBundle["selectedDinner"] };
       if (res.ok && p.selection) { setBundle((c) => ({ ...c, selectedDinner: p.selection! })); setView("home"); }
     } finally { setBusy(false); }
