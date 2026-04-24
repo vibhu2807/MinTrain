@@ -1,3 +1,7 @@
+> **Status: Archived (April 2026).** Live demo offline after a routine
+> API key rotation. Code is preserved as reference. Ping me if you want
+> a walkthrough of the architecture or lessons learned.
+
 # MinTrain
 
 A private, mobile-first household fitness and meal coach.
